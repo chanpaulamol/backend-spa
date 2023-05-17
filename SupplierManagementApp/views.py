@@ -230,6 +230,23 @@ class AHPcalculationListCreateView(generics.ListCreateAPIView):
 
         return consistency_ratio
 
+    def get_random_index(self, n):
+        random_index_table = {
+            1: 0,
+            2: 0,
+            3: 0.58,
+            4: 0.9,
+            5: 1.12,
+            6: 1.24,
+            7: 1.32,
+            8: 1.41,
+            9: 1.45,
+            10: 1.49,
+            # Add more values if needed
+        }
+
+        return random_index_table.get(n, None)
+
     def generate_final_ranking(self, priority_vector):
         # Generate the final ranking by sorting the priority vector in descending order
         ranking = sorted(range(len(priority_vector)),

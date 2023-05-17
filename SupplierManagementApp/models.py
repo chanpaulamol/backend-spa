@@ -17,7 +17,7 @@ class AHPcalculation(models.Model):
         User, verbose_name="user", on_delete=models.CASCADE)
     supplier = models.ForeignKey(
         Supplier, verbose_name="supplier", on_delete=models.CASCADE)
-    results = models.DecimalField(max_digits=5, decimal_places=2)
+    results = models.DecimalField(max_digits=10, decimal_places=4)
     ranking = models.IntegerField()
 
     def __str__(self):
