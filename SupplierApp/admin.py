@@ -1,30 +1,30 @@
 from django.contrib import admin
-# from .models import Supplier, AHPcalculation, Criteria, Weights, BenefitCost
+from .models import Supplier, AHPcalculation, Criteria, Weights, BenefitCost
 
 
-# class SupplierAdmin(admin.ModelAdmin):
-#     list_display = ('name', 'location', 'email', 'phone_number')
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ('name', 'location', 'email', 'phone_number')
 
 
-# class AHPcalculationAdmin(admin.ModelAdmin):
-#     list_display = ('user', 'supplier', 'results', 'ranking')
+class AHPcalculationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'supplier', 'results', 'ranking')
 
 
-# # class CriteriaAdmin(admin.ModelAdmin):
-# #     list_display = ('product_name', 'price',
-# #                     'delivery_time', 'cost', 'distance')
+class CriteriaAdmin(admin.ModelAdmin):
+    list_display = ('price', 'quality', 'quantity', 'delivery',
+                    'credibility', 'license', 'distance', 'shipping_fees')
 
 
-# class WeightsAdmin(admin.ModelAdmin):
-#     list_display = ('criteria_id', 'value')
+class WeightsAdmin(admin.ModelAdmin):
+    list_display = ('criteria_id', 'value')
 
 
-# class BenefitCostAdmin(admin.ModelAdmin):
-#     list_display = ('criteria_id', 'benefit', 'cost')
+class BenefitCostAdmin(admin.ModelAdmin):
+    list_display = ('criteria_id', 'benefit', 'cost')
 
 
-# admin.site.register(Supplier, SupplierAdmin)
-# admin.site.register(AHPcalculation, AHPcalculationAdmin)
-# # admin.site.register(Criteria, CriteriaAdmin)
-# admin.site.register(Weights, WeightsAdmin)
-# admin.site.register(BenefitCost, BenefitCostAdmin)
+admin.site.register(Supplier, SupplierAdmin)
+admin.site.register(AHPcalculation, AHPcalculationAdmin)
+admin.site.register(Criteria, CriteriaAdmin)
+admin.site.register(Weights, WeightsAdmin)
+admin.site.register(BenefitCost, BenefitCostAdmin)
