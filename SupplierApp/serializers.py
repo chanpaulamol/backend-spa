@@ -17,8 +17,8 @@ class AHPcalculationSerializer(serializers.ModelSerializer):
 class CriteriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Criteria
-        fields = ['product_name', 'price',
-                  'delivery_time', 'cost', 'distance']
+        fields = ['price', 'quality', 'quantity', 'delivery',
+                  'credibility', 'license', 'distance', 'shipping_fees']
 
 
 class WeightsSerializer(serializers.ModelSerializer):

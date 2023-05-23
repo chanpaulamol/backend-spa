@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'SupplierManagementApp',
+    'SupplierApp',
     'rest_framework',
     'corsheaders',
 ]
@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'spa_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'spadb',
         'USER': 'postgres',
         'PASSWORD': 'chan123',
         'HOST': '127.0.0.1',

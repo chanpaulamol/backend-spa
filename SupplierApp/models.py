@@ -25,14 +25,19 @@ class AHPcalculation(models.Model):
 
 
 class Criteria(models.Model):
-    product_name = models.TextField(max_length=20)
-    price = models.IntegerField()
-    delivery_time = models.IntegerField()
-    cost = models.IntegerField()
-    distance = models.IntegerField()
+    supplier_id = models.ForeignKey(
+        Supplier, verbose_name="supplier", on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=4)
+    quality = models.PositiveIntegerField()
+    quantity = models.PositiveIntegerField()
+    delivery = models.DateField()
+    credibility = models.CharField(max_length=20)
+    license = models.BooleanField()
+    distance = models.DecimalField(max_digits=10, decimal_places=4)
+    shipping_fees = models.DecimalField(max_digits=10, decimal_places=4)
 
     def __str__(self):
-        return self.product_name
+        return self.supplier_id
 
 
 class Weights(models.Model):
