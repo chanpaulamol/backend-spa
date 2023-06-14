@@ -1,31 +1,20 @@
 from django.urls import path
-from . import views
+from .views import (
+    RegistrationView,
+    LoginView,
+    SupplierListCreateView,
+    SupplierRetrieveUpdateDestroyView,
+    RankingListView,
+    RankingCreateView
+)
 
 urlpatterns = [
-    # Supplier URLs
-    path('suppliers/', views.SupplierListCreateView.as_view(), name='supplier-list'),
-    path('suppliers/<int:pk>/',
-         views.SupplierRetrieveUpdateDestroyView.as_view(), name='supplier-detail'),
-
-    # AHP Calculation URLs
-    path('ahp/', views.AHPcalculationListCreateView.as_view(),
-         name='ahp-calculation-list'),
-    path('ahp/<int:pk>/', views.AHPcalculationRetrieveUpdateDestroyView.as_view(),
-         name='ahp-calculation-detail'),
-
-    # Criteria URLs
-    path('criteria/', views.CriteriaListCreateView.as_view(), name='criteria-list'),
-    path('criteria/<int:pk>/',
-         views.CriteriaRetrieveUpdateDestroyView.as_view(), name='criteria-detail'),
-
-    # Weights URLs
-    path('weights/', views.WeightsListCreateView.as_view(), name='weights-list'),
-    path('weights/<int:pk>/',
-         views.WeightsRetrieveUpdateDestroyView.as_view(), name='weights-detail'),
-
-    # Benefit and Cost URLs
-    path('benefitcost/', views.BenefitCostListCreateView.as_view(),
-         name='benefitcost-list'),
-    path('benefitcost/<int:pk>/',
-         views.BenefitCostRetrieveUpdateDestroyView.as_view(), name='benefitcost-detail'),
+    path('registration/', RegistrationView.as_view(), name='registration'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('suppliers/', SupplierListCreateView.as_view(),
+         name='supplier-list-create'),
+    path('suppliers/<int:pk>/', SupplierRetrieveUpdateDestroyView.as_view(),
+         name='supplier-retrieve-update-destroy'),
+    path('ahp/rankings/', RankingListView.as_view(), name='ranking-list'),
+    path('ahp/save/', RankingCreateView.as_view(), name='ranking-create'),
 ]

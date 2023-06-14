@@ -1,33 +1,25 @@
 from rest_framework import serializers
-from .models import Supplier, AHPcalculation, Criteria, Weights, BenefitCost
+from .models import Supplier,  Ranking
+from django.contrib.auth.models import User
+
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['password', 'username', 'first_name', 'last_name',
+                  'email', 'is_staff', 'is_active', 'date_joined']
 
 
 class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
-        fields = ['name', 'location', 'email', 'phone_number']
+        fields = ['name', 'financial_status', 'quality', 'service', 'reputation',
+                  'technical_capability', 'price_cost']
 
 
-class AHPcalculationSerializer(serializers.ModelSerializer):
+class RankingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = AHPcalculation
-        fields = ['supplier', 'results', 'ranking']
-
-
-class CriteriaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Criteria
-        fields = ['price', 'quality', 'quantity', 'delivery',
-                  'credibility', 'license', 'distance', 'shipping_fees']
-
-
-class WeightsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Weights
-        fields = ['criteria_id', 'value']
-
-
-class BenefitCostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BenefitCost
-        fields = ['criteria_id', 'benefit', 'cost']
+        model = Ranking
+        fields = ['supplier_name', 'results', 'ranking']

@@ -25,8 +25,7 @@ SECRET_KEY = 'django-insecure-*ytoys)q^#3&5fu=q4z0m!cfa1ms=0k+rb@eao(qsr#k0h1^0u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['http://192.168.56.1:3000', '127.0.0.1']
 
 # Application definition
 
@@ -55,8 +54,13 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://192.168.56.1:3000',
-    # Add other allowed origins if needed
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'SupplierApp.backends.EmailBackend',  # Custom email backend
+]
+
 
 ROOT_URLCONF = 'spa_backend.urls'
 
@@ -85,7 +89,7 @@ WSGI_APPLICATION = 'spa_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'spadb',
+        'NAME': 'db_supplier_ranking',
         'USER': 'postgres',
         'PASSWORD': 'chan123',
         'HOST': '127.0.0.1',

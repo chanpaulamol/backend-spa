@@ -1,30 +1,15 @@
 from django.contrib import admin
-from .models import Supplier, AHPcalculation, Criteria, Weights, BenefitCost
+from .models import Supplier, Ranking
 
 
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'location', 'email', 'phone_number')
+    list_display = ['name', 'financial_status', 'quality', 'service',
+                    'reputation', 'technical_capability', 'price_cost']
 
 
 class AHPcalculationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'supplier', 'results', 'ranking')
-
-
-class CriteriaAdmin(admin.ModelAdmin):
-    list_display = ('price', 'quality', 'quantity', 'delivery',
-                    'credibility', 'license', 'distance', 'shipping_fees')
-
-
-class WeightsAdmin(admin.ModelAdmin):
-    list_display = ('criteria_id', 'value')
-
-
-class BenefitCostAdmin(admin.ModelAdmin):
-    list_display = ('criteria_id', 'benefit', 'cost')
+    list_display = ('supplier_name', 'results', 'ranking')
 
 
 admin.site.register(Supplier, SupplierAdmin)
-admin.site.register(AHPcalculation, AHPcalculationAdmin)
-admin.site.register(Criteria, CriteriaAdmin)
-admin.site.register(Weights, WeightsAdmin)
-admin.site.register(BenefitCost, BenefitCostAdmin)
+admin.site.register(Ranking, AHPcalculationAdmin)

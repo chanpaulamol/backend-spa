@@ -1,268 +1,163 @@
+from SupplierApp.backends import EmailBackend
+from rest_framework import generics, status
 from rest_framework.response import Response
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .serializers import UserSerializer, SupplierSerializer,  RankingSerializer
+from .models import Supplier,  Ranking
 import numpy as np
-from rest_framework import generics,  status
-from .models import Supplier, AHPcalculation, Criteria, Weights, BenefitCost
-from .serializers import SupplierSerializer, AHPcalculationSerializer, CriteriaSerializer, WeightsSerializer, BenefitCostSerializer
-# Supplier
+from utils.calculate_ahp import ahp
+# Registration
+
+
+class RegistrationView(APIView):
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            # Perform password hashing
+            hashed_password = make_password(
+                serializer.validated_data['password'])
+
+            # Remove the 'password' key from the validated data
+            del serializer.validated_data['password']
+
+            # Create the user instance with the validated serializer data
+            user = User.objects.create(
+                password=hashed_password, **serializer.validated_data)
+
+            # Perform any additional actions (e.g., sending confirmation email)
+            # ...
+
+            return Response(status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Login
+
+
+class LoginView(generics.CreateAPIView):
+    def create(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = EmailBackend().authenticate(request, email=email, password=password)
+        if user is not None:
+            login(request, user)
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 
 class SupplierListCreateView(generics.ListCreateAPIView):
-    """
-    API endpoint for listing and creating Supplier instances.
-    """
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SupplierRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API endpoint for retrieving, updating, and deleting a specific Supplier instance.
-    """
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
-
-    def perform_create(self, serializer):
-        """
-        Custom logic for creating a new Supplier instance.
-        """
-        serializer.save()
-
-    def perform_update(self, serializer):
-        """
-        Custom logic for updating an existing Supplier instance.
-        """
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        """
-        Custom logic for deleting a Supplier instance.
-        """
-        instance.delete()
+    permission_classes = [IsAuthenticated]
+# AHP calculate
 
 
-# Criteria
-class CriteriaListCreateView(generics.ListCreateAPIView):
-    """
-    API endpoint for listing and creating Criteria instances.
-    """
-    queryset = Criteria.objects.all()
-    serializer_class = CriteriaSerializer
+def AHPCalculate():
+    suppliers = Supplier.objects.all()
+
+    if not suppliers:
+        return []
+
+    supplier_names = [supplier.name for supplier in suppliers]
+    supplier_matrix = np.array([
+        [supplier.financial_status for supplier in suppliers],
+        [supplier.quality for supplier in suppliers],
+        [supplier.service for supplier in suppliers],
+        [supplier.reputation for supplier in suppliers],
+        [supplier.technical_capability for supplier in suppliers],
+        [supplier.price_cost for supplier in suppliers]
+    ])
+
+    print("Matrix", supplier_matrix)
+
+    # Normalize the supplier matrix
+    normalized_supplier_matrix = supplier_matrix / \
+        supplier_matrix.sum(axis=1, keepdims=True)
+
+    print("Normalized Supplier Matrix", normalized_supplier_matrix)
+
+    # Get AHP values from the ahp function
+    priority_weights, _, _ = ahp()
+
+    # Multiply each row of the normalized supplier matrix with the corresponding row of the priority weights
+    alternative_results = normalized_supplier_matrix.T * priority_weights
+
+    # Sum the results of element-wise multiplications to calculate the final result
+    results = np.sum(alternative_results, axis=1)
+
+    # Rank the suppliers
+    ranked_indices = np.argsort(-results)
+    ranked_suppliers = []
+    for i, idx in enumerate(ranked_indices):
+        supplier_name = supplier_names[idx]
+        supplier_result = results[idx]
+        supplier_ranking = i + 1
+        ranked_suppliers.append({
+            'name': supplier_name,
+            'result': supplier_result,
+            'ranking': supplier_ranking
+        })
+
+    return ranked_suppliers
 
 
-class CriteriaRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API endpoint for retrieving, updating, and deleting a specific Criteria instance.
-    """
-    queryset = Criteria.objects.all()
-    serializer_class = CriteriaSerializer
+check = AHPCalculate()
+for i in check:
+    print(i)
 
-    def perform_create(self, serializer):
-        """
-        Custom logic for creating a new Criteria instance.
-        """
-        serializer.save()
-
-    def perform_update(self, serializer):
-        """
-        Custom logic for updating an existing Criteria instance.
-        """
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        """
-        Custom logic for deleting a Criteria instance.
-        """
-        instance.delete()
+# AHP calculation endpoints
 
 
-# Weights
-class WeightsListCreateView(generics.ListCreateAPIView):
-    """
-    API endpoint for listing and creating Weights instances.
-    """
-    queryset = Weights.objects.all()
-    serializer_class = WeightsSerializer
+class RankingListView(APIView):
+    def get(self, request):
+        rankings = AHPCalculate()
+
+        return Response(rankings)
 
 
-class WeightsRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API endpoint for retrieving, updating, and deleting a specific Weights instance.
-    """
-    queryset = Weights.objects.all()
-    serializer_class = WeightsSerializer
+class RankingCreateView(generics.ListCreateAPIView):
+    queryset = Ranking.objects.all()
+    serializer_class = RankingSerializer
 
-    def perform_create(self, serializer):
-        """
-        Custom logic for creating a new Weights instance.
-        """
-        serializer.save()
+    def post(self, request, *args, **kwargs):
+        serializer = RankingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
 
-    def perform_update(self, serializer):
-        """
-        Custom logic for updating an existing Weights instance.
-        """
-        serializer.save()
+            # Get the validated data from the serializer
+            validated_data = serializer.validated_data
 
-    def perform_destroy(self, instance):
-        """
-        Custom logic for deleting a Weights instance.
-        """
-        instance.delete()
+            # Access the data from the validated serializer data
+            supplier_name = validated_data['supplier']['name']
+            results = validated_data['results']
+            ranking = validated_data['ranking']
 
+            # Perform your ranking computation logic here
+            # ...
 
-# Benefit and Cost
-class BenefitCostListCreateView(generics.ListCreateAPIView):
-    """
-    API endpoint for listing and creating BenefitCost instances.
-    """
-    queryset = BenefitCost.objects.all()
-    serializer_class = BenefitCostSerializer
+            # Create a new instance of Ranking model with the computed ranking
+            ranking_instance = Ranking.objects.create(
+                supplier_name=supplier_name,
+                results=results,  # Update with your computed results
+                ranking=ranking,
+                # Add any other fields required by your Ranking model
+            )
 
-
-class BenefitCostRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API endpoint for retrieving, updating, and deleting a specific BenefitCost instance.
-    """
-    queryset = BenefitCost.objects.all()
-    serializer_class = BenefitCostSerializer
-
-    def perform_create(self, serializer):
-        """
-        Custom logic for creating a new BenefitCost instance.
-        """
-        serializer.save()
-
-    def perform_update(self, serializer):
-        """
-        Custom logic for updating an existing BenefitCost instance.
-        """
-        serializer.save()
-
-    def perform_destroy(self, instance):
-        """
-        Custom logic for deleting a BenefitCost instance.
-        """
-        instance.delete()
-
-# AHP calculation
-
-
-class AHPcalculationListCreateView(generics.ListCreateAPIView):
-    queryset = AHPcalculation.objects.all()
-    serializer_class = AHPcalculationSerializer
-
-    def create(self, request, *args, **kwargs):
-        criteria_values = request.data.get('criteria_values', [])
-        supplier_id = request.data.get('supplier', None)
-
-        # 1. Define the Decision Hierarchy
-        criteria_queryset = Criteria.objects.all()
-        criteria_count = criteria_queryset.count()
-        if criteria_count < 2:
-            return Response({'detail': 'At least 2 criteria are required for AHP calculation.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 2. Perform Pairwise Comparisons
-        pairwise_matrix = [
-            [1.0] * criteria_count for _ in range(criteria_count)]
-        # Update pairwise_matrix based on pairwise comparisons of criteria
-
-        # 3. Calculate the Weighted Sum
-        weighted_sum = self.calculate_weighted_sum(
-            pairwise_matrix, criteria_values)
-
-        # 4. Calculate the Priority Vector
-        priority_vector = self.calculate_priority_vector(weighted_sum)
-
-        # 5. Calculate the Consistency Ratio (optional)
-        consistency_ratio = self.calculate_consistency_ratio(pairwise_matrix)
-
-        # 6. Perform Sensitivity Analysis (optional)
-        # Add sensitivity analysis logic if needed
-
-        # 7. Generate the Final Ranking
-        ranking = self.generate_final_ranking(priority_vector)
-
-        # Create the AHP calculation instance with the calculated ranking and save it to the database
-        ahp_calculation_data = {
-            'supplier': supplier_id,
-            'results': weighted_sum,
-            'ranking': ranking,
-        }
-        serializer = self.get_serializer(data=ahp_calculation_data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def calculate_weighted_sum(self, pairwise_matrix, criteria_values):
-        weighted_sum = [0.0] * len(criteria_values)
-
-        for i in range(len(criteria_values)):
-            for j in range(len(pairwise_matrix[i])):
-                weighted_sum[i] += pairwise_matrix[i][j] * criteria_values[j]
-
-        return weighted_sum
-
-    def calculate_priority_vector(self, weighted_sum):
-        total_sum = sum(weighted_sum)
-        priority_vector = [value / total_sum for value in weighted_sum]
-
-        return priority_vector
-
-    def calculate_consistency_ratio(self, pairwise_matrix):
-        n = len(pairwise_matrix)
-
-        # Calculate the eigenvalues and eigenvectors
-        eigenvalues, eigenvectors = np.linalg.eig(pairwise_matrix)
-
-        # Find the maximum eigenvalue
-        max_eigenvalue = max(eigenvalues)
-
-        # Calculate the consistency index
-        consistency_index = (max_eigenvalue - n) / (n - 1)
-
-        # Lookup random index (RI) value based on the size of the matrix
-        random_index = self.get_random_index(n)
-
-        # Calculate the consistency ratio
-        consistency_ratio = consistency_index / random_index
-
-        return consistency_ratio
-
-    def get_random_index(self, n):
-        random_index_table = {
-            1: 0,
-            2: 0,
-            3: 0.58,
-            4: 0.9,
-            5: 1.12,
-            6: 1.24,
-            7: 1.32,
-            8: 1.41,
-            9: 1.45,
-            10: 1.49,
-            # Add more values if needed
-        }
-
-        return random_index_table.get(n, None)
-
-    def generate_final_ranking(self, priority_vector):
-        # Generate the final ranking by sorting the priority vector in descending order
-        ranking = sorted(range(len(priority_vector)),
-                         key=lambda i: priority_vector[i], reverse=True)
-
-        return ranking
-
-
-class AHPcalculationRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = AHPcalculation.objects.all()
-    serializer_class = AHPcalculationSerializer
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def perform_destroy(self, instance):
-        instance.delete()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
