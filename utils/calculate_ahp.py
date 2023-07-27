@@ -15,18 +15,27 @@ def ahp():
     # Step 1: Normalize the comparison matrix
     normalized_matrix = comparison_matrix / comparison_matrix.sum(axis=0)
 
+    # Round off the normalized matrix to 4 decimal places
+    normalized_matrix = np.round(normalized_matrix, decimals=4)
+
     # Step 2: Calculate the priority weights
-    priority_weights = normalized_matrix.mean(axis=1)
+    priority_weights = np.mean(normalized_matrix, axis=1)
+
+    # Round off the priority weights to 4 decimal places
+    priority_weights = np.round(priority_weights, decimals=4)
 
     # Step 3: Check consistency
     eigenvalue, eigenvector = np.linalg.eig(comparison_matrix)
     max_eigenvalue = max(eigenvalue)
-    consistency_index = (max_eigenvalue - len(comparison_matrix)
-                         ) / (len(comparison_matrix) - 1)
+    print("Maxs", max_eigenvalue)
+    consistency_index = np.round(
+        (max_eigenvalue - len(comparison_matrix)) / (len(comparison_matrix) - 1), decimals=3)
+    index = 1.24
     # Divide by the consistency index for a 6x6 matrix
-    consistency_ratio = consistency_index / 1.24
+    consistency_ratio = np.round((consistency_index/index), decimals=4)
 
     # Display the results
+    print("Normalized Matrix:")
     print(normalized_matrix)
     print("\nPriority Weights:")
     print(priority_weights)

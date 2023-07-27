@@ -30,6 +30,7 @@ ALLOWED_HOSTS = ['http://192.168.56.1:3000', '127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework_simplejwt',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -39,6 +40,7 @@ INSTALLED_APPS = [
     'SupplierApp',
     'rest_framework',
     'corsheaders',
+
 ]
 
 MIDDLEWARE = [
@@ -55,7 +57,12 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     'http://192.168.56.1:3000',
 ]
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # Other authentication classes
+    ],
+}
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'SupplierApp.backends.EmailBackend',  # Custom email backend

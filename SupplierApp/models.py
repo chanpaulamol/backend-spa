@@ -15,7 +15,7 @@ class Supplier(models.Model):
 
 
 class Ranking(models.Model):
-    supplier_name = models.CharField(max_length=150)
+    supplier_name = models.CharField(max_length=200, unique=True)
     results = models.DecimalField(max_digits=10, decimal_places=4)
     ranking = models.IntegerField()
 
